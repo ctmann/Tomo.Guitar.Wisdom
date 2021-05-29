@@ -1,0 +1,65 @@
+---
+title: "Tomo Guitar Wisdom Updates"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+```{r my.libraries, include = FALSE}
+library(xsitemap)
+library(tidyverse)
+library(clipr)
+library(DT)
+
+```
+
+
+```{r getdata, include=FALSE}
+x <- xsitemapGet("https://tomovhxtv.vhx.tv/sitemap.xml")%>% 
+  slice(10:n() ) %>% 
+  mutate(my.basename  = str_remove(loc, "https://tomovhxtv.vhx.tv/")) %>% 
+  separate(my.basename,
+           into=c("series", "trashme", "title"),
+           sep="/") %>% 
+  mutate(title = str_replace_na(title, "landing.page") ) %>% 
+  # sortingid
+  group_by(series) %>% mutate(series.sort.id = row_number() ) %>% ungroup() %>% 
+  # updated
+  mutate(year =  as.numeric(format(lastmod, " %Y")),
+         month = as.numeric(format(lastmod, "%m")),
+         day =  lastmod ) %>% 
+  # datemath
+  select(id = series.sort.id,
+         year, month, day,
+         link = loc,
+         series = series,
+         title) 
+
+```
+
+```{r data.table, echo=FALSE, warning=FALSE, message = FALSE}
+x %>% 
+  filter(!(series %in% "forums")) %>% 
+  mutate(link = paste0("<a href = ",'"', link, '">',"link", "</a>") ) %>% 
+  datatable(filter = 'top', 
+            rownames=FALSE,
+            extensions = 'FixedColumns',
+            options = list(
+              columnDefs = list(list(width = '5%',
+                                     targets = c(0,1,2,4) ) ),
+              columnDefs = list(list(width = '5%',
+                                     targets = c(3) ) ),
+              columnDefs = list(list(width = '20%',
+                                     targets = c( 5) ) ),
+                            columnDefs = list(list(width = '55%',
+                                     targets = c( 6) ) ),
+              fixedColumns = TRUE,
+              pageLength = 1000, 
+              autoWidth = TRUE),
+              escape = FALSE,
+              )
+```
+
+
+
